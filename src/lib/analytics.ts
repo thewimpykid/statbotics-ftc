@@ -23,11 +23,7 @@ export async function getTeamEvents(team: string, season: string) {
   console.log("🔍 Raw getTeamEvents data:", data);
 
   // Patch here based on structure:
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data.events)) return data.events;
-
-  // If we can't find any usable structure
-  return [];
+  return data.events
 }
 
 
@@ -37,7 +33,7 @@ export async function getMostRecentPlayedEvent(
   season: string
 ): Promise<{ eventCode: string; eventName: string } | null> {
   const raw = await getTeamEvents(teamNumber.toString(), season);
-  const events = Array.isArray(raw) ? raw : raw.events ?? [];
+  const events = raw
 
   console.log("Fetched events:", events);
 
@@ -79,7 +75,7 @@ export async function getMostRecentPlayedEvent(
   }
 
   console.log("✅ Most recent event selected:", mostRecentEvent);
-  return mostRecentEvent;
+  return mostRecentEvent?.eventCode;
 }
 
 

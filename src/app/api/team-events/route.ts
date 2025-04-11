@@ -28,7 +28,9 @@ export async function GET(req: NextRequest) {
       eventName: e.eventName,
     }));
 
-    return NextResponse.json(simplified);
+    console.log(data)
+
+    return NextResponse.json(data);
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

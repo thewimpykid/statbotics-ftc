@@ -15,6 +15,7 @@ import {
   categoryAuto,
   getMostRecentPlayedEvent
 } from "@/lib/analytics";
+import Matches from "./components/Matches";
 
 // Stat Card Component
 const StatCard = ({
@@ -28,12 +29,14 @@ const StatCard = ({
   tooltip: string;
   suffix?: string;
 }) => (
-  <div className="relative group bg-gradient-to-br from-[#1a1a1a] to-[#101010] rounded-2xl p-6 shadow-md transition hover:scale-[1.01] font-sans">
+  <div className="relative group bg-gradient-to-br from-[#1a1a1a] to-[#101010] rounded-2xl p-6 shadow-md transition hover:scale-[1.01] font-sans overflow-visible z-10">
     <h3 className="text-sm text-gray-400 mb-1">{title}</h3>
-    <p className="text-3xl font-bold text-gray-100">{value.toFixed(2)}{suffix}</p>
-    {/* Tooltip shown below the card */}
-    <div className="absolute hidden group-hover:block left-1/2 transform -translate-x-1/2 top-full mt-3 w-64">
-      <div className="bg-black/80 text-white text-xs p-3 rounded-md shadow-xl text-center">
+    <p className="text-3xl font-bold text-gray-100">
+      {value.toFixed(2)}
+      {suffix}
+    </p>
+    <div className="absolute hidden group-hover:block left-1/2 transform -translate-x-1/2 top-full mt-3 w-64 z-20">
+      <div className="bg-black/90 text-white text-xs p-3 rounded-md shadow-xl text-center pointer-events-none">
         {tooltip}
       </div>
     </div>
@@ -42,9 +45,10 @@ const StatCard = ({
 
 export default function TeamCardPage() {
   const [teamNumber, setTeamNumber] = useState("23786");
-  const [eventCode] = useState("USNJCMPTRPK");
+  const [eventCode, setEventCode] = useState("");
   const [season] = useState("2024");
   const [loading, setLoading] = useState(false);
+  const [matches, setMatches] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [stats, setStats] = useState<null | Record<string, number>>(null);
   const [displayedTeamName, setDisplayedTeamName] = useState<string | null>(null);
@@ -57,6 +61,7 @@ export default function TeamCardPage() {
     try {
       const num = parseInt(teamNumber, 10);
 
+      const eventCode = await getMostRecentPlayedEvent(num, season);
       const allMatches = await fetchAllMatchesForEvent(eventCode, season);
       const overallOPR = calculateCategoryOPR(allMatches, categoryOverall);
       const autoOPR = calculateCategoryOPR(allMatches, categoryAuto);
@@ -69,6 +74,9 @@ export default function TeamCardPage() {
 
       const dpr = calculateDPR(allMatches);
       const teamMatches = await fetchMatchResults(num, eventCode, season);
+      setMatches(teamMatches)
+      
+      console.log(matches);
 
       setStats({
         overallOPR: overallOPR[num] || 0,
@@ -82,7 +90,6 @@ export default function TeamCardPage() {
         momentum: computeTeamMomentum(teamMatches, num),
       });
 
-      // Update team name display only after successful search
       setDisplayedTeamName(`Team ${num}`);
     } catch (err: any) {
       console.error(err);
@@ -95,8 +102,6 @@ export default function TeamCardPage() {
   return (
     <main className="min-h-screen bg-neutral-950 text-white flex flex-col items-center p-6 font-sans">
       <div className="w-full max-w-4xl space-y-8">
-
-        {/* Display team name only after search */}
         {displayedTeamName && (
           <section className="bg-gradient-to-br from-[#1c1c1c] to-[#0f0f0f] rounded-3xl p-8 text-center shadow-lg">
             <h1 className="text-3xl font-extrabold tracking-tight text-white">
@@ -123,7 +128,6 @@ export default function TeamCardPage() {
           </button>
         </section>
 
-        {/* Error Message */}
         {errorMsg && (
           <div className="bg-red-700/80 text-white p-3 rounded-xl shadow">
             {errorMsg}
@@ -183,6 +187,8 @@ export default function TeamCardPage() {
           </section>
         )}
       </div>
+
+      <Matches matches={matches} />
     </main>
   );
 }
